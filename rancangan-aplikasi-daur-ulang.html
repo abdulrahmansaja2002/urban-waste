@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rancangan Sistem Aplikasi — Daur Ulang Startup</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f0c;
+    --surface: #161713;
+    --surface2: #1e201a;
+    --border: #2a2d24;
+    --accent: #a8e63d;
+    --accent2: #e6c43d;
+    --accent3: #3de6b4;
+    --text: #e8ead4;
+    --text-muted: #7a7d68;
+    --text-dim: #4a4d3e;
+    --red: #e6503d;
+    --phase1: #a8e63d;
+    --phase2: #3de6b4;
+    --phase3: #e6c43d;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lora', serif;
+    font-size: 15px;
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* ── SIDEBAR NAV ── */
+  nav {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 40px 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nav-logo {
+    padding: 0 24px 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .nav-logo .mark {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .nav-logo .title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 24px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+    border-left: 2px solid transparent;
+  }
+
+  nav a:hover {
+    color: var(--text);
+    background: var(--surface2);
+    border-left-color: var(--accent);
+  }
+
+  nav a .num {
+    color: var(--text-dim);
+    font-size: 10px;
+  }
+
+  .nav-section {
+    padding: 16px 24px 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* ── MAIN CONTENT ── */
+  main {
+    margin-left: 220px;
+    padding: 0 60px 80px 60px;
+    max-width: 1100px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 64px;
+    position: relative;
+  }
+
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero-tag::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(32px, 4vw, 52px);
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+  }
+
+  h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--text-muted);
+    max-width: 600px;
+    line-height: 1.7;
+    margin-bottom: 40px;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .hero-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .hero-stat .val {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--text);
+  }
+
+  .hero-stat .lbl {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .divider {
+    width: 1px;
+    background: var(--border);
+    align-self: stretch;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section {
+    margin-bottom: 72px;
+    scroll-margin-top: 40px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    min-width: 32px;
+  }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 10px;
+    letter-spacing: 0.01em;
+  }
+
+  p { margin-bottom: 12px; color: var(--text-muted); }
+
+  /* ── STACK OVERVIEW ── */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stack-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stack-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .stack-card.frontend::before { background: var(--accent); }
+  .stack-card.backend::before { background: var(--accent2); }
+  .stack-card.infra::before { background: var(--accent3); }
+  .stack-card.mobile::before { background: var(--red); }
+  .stack-card.db::before { background: #a93de6; }
+  .stack-card.iot::before { background: #3d8ee6; }
+
+  .stack-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .stack-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .stack-tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .tag {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  /* ── ARCHITECTURE DIAGRAM ── */
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 32px;
+    position: relative;
+  }
+
+  .arch-layer {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    align-items: center;
+  }
+
+  .arch-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    width: 80px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .arch-boxes {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+
+  .arch-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .arch-box.highlight-green { border-color: var(--accent); color: var(--accent); }
+  .arch-box.highlight-yellow { border-color: var(--accent2); color: var(--accent2); }
+  .arch-box.highlight-teal { border-color: var(--accent3); color: var(--accent3); }
+  .arch-box.highlight-red { border-color: var(--red); color: var(--red); }
+
+  .arch-arrow {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 18px;
+    margin: 4px 0 4px 80px;
+  }
+
+  /* ── FEATURE MODULES ── */
+  .module-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .module-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    position: relative;
+  }
+
+  .module-card.full { grid-column: 1 / -1; }
+
+  .module-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    margin-bottom: 14px;
+  }
+
+  .module-icon.green { background: rgba(168, 230, 61, 0.12); }
+  .module-icon.yellow { background: rgba(230, 196, 61, 0.12); }
+  .module-icon.teal { background: rgba(61, 230, 180, 0.12); }
+  .module-icon.red { background: rgba(230, 80, 61, 0.12); }
+  .module-icon.purple { background: rgba(169, 61, 230, 0.12); }
+  .module-icon.blue { background: rgba(61, 142, 230, 0.12); }
+
+  .feature-list {
+    list-style: none;
+    margin-top: 12px;
+  }
+
+  .feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--surface2);
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .feature-list li:last-child { border-bottom: none; }
+
+  .feature-list li::before {
+    content: '→';
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .badge {
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  .badge.mvp { background: rgba(168, 230, 61, 0.15); color: var(--accent); border: 1px solid rgba(168,230,61,0.3); }
+  .badge.v2 { background: rgba(230, 196, 61, 0.15); color: var(--accent2); border: 1px solid rgba(230,196,61,0.3); }
+  .badge.v3 { background: rgba(61, 230, 180, 0.15); color: var(--accent3); border: 1px solid rgba(61,230,180,0.3); }
+
+  /* ── PHASE ROADMAP ── */
+  .phases {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .phase {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 32px;
+    padding: 32px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .phase:last-child { border-bottom: none; }
+
+  .phase-meta {
+    position: relative;
+  }
+
+  .phase-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .phase-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    margin-bottom: 8px;
+  }
+
+  .phase-title.p1 { color: var(--phase1); }
+  .phase-title.p2 { color: var(--phase2); }
+  .phase-title.p3 { color: var(--phase3); }
+
+  .phase-duration {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  .phase-goal {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  .phase-content h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+    margin: 16px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .phase-content h3:first-child { margin-top: 0; }
+
+  .task-list {
+    list-style: none;
+  }
+
+  .task-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 5px 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--surface2);
+  }
+
+  .task-list li:last-child { border-bottom: none; }
+
+  .task-list li .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .dot.p1 { background: var(--phase1); }
+  .dot.p2 { background: var(--phase2); }
+  .dot.p3 { background: var(--phase3); }
+
+  /* ── DB SCHEMA ── */
+  .schema-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .schema-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .schema-head {
+    padding: 10px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .schema-head.green { background: rgba(168, 230, 61, 0.1); color: var(--accent); }
+  .schema-head.yellow { background: rgba(230, 196, 61, 0.1); color: var(--accent2); }
+  .schema-head.teal { background: rgba(61, 230, 180, 0.1); color: var(--accent3); }
+  .schema-head.red { background: rgba(230, 80, 61, 0.1); color: var(--red); }
+  .schema-head.purple { background: rgba(169, 61, 230, 0.1); color: #a93de6; }
+  .schema-head.blue { background: rgba(61, 142, 230, 0.1); color: #3d8ee6; }
+
+  .schema-body {
+    padding: 10px 14px;
+  }
+
+  .schema-field {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    border-bottom: 1px solid var(--surface2);
+  }
+
+  .schema-field:last-child { border-bottom: none; }
+
+  .field-name { color: var(--text-muted); }
+  .field-type { color: var(--text-dim); }
+  .field-pk { color: var(--accent2); }
+
+  /* ── API ENDPOINTS ── */
+  .endpoint-group {
+    margin-bottom: 24px;
+  }
+
+  .endpoint-group-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .endpoint {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+  }
+
+  .method {
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 500;
+    min-width: 44px;
+    text-align: center;
+  }
+
+  .method.get { background: rgba(61, 230, 180, 0.15); color: var(--accent3); }
+  .method.post { background: rgba(168, 230, 61, 0.15); color: var(--accent); }
+  .method.put { background: rgba(230, 196, 61, 0.15); color: var(--accent2); }
+  .method.delete { background: rgba(230, 80, 61, 0.15); color: var(--red); }
+
+  .endpoint-path { color: var(--text-muted); flex: 1; }
+  .endpoint-desc { color: var(--text-dim); font-size: 10px; }
+
+  /* ── METRIC CARDS ── */
+  .metric-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+    text-align: center;
+  }
+
+  .metric-val {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 24px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .metric-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* ── CALLOUT ── */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+
+  .callout.yellow { border-left-color: var(--accent2); }
+  .callout.teal { border-left-color: var(--accent3); }
+  .callout.red { border-left-color: var(--red); }
+
+  .callout-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .callout p {
+    font-size: 13px;
+    margin-bottom: 0;
+  }
+
+  /* ── INLINE CODE ── */
+  code {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--accent2);
+  }
+
+  /* ── FLOW CHART ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+
+  .flow-step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .flow-arrow {
+    color: var(--text-dim);
+    font-size: 16px;
+    padding: 0 8px;
+  }
+
+  /* ── RISK TABLE ── */
+  .risk-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .risk-table th {
+    text-align: left;
+    padding: 10px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .risk-table td {
+    padding: 10px 14px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--surface2);
+    vertical-align: top;
+  }
+
+  .risk-level {
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+  }
+
+  .risk-level.high { background: rgba(230, 80, 61, 0.15); color: var(--red); }
+  .risk-level.mid { background: rgba(230, 196, 61, 0.15); color: var(--accent2); }
+  .risk-level.low { background: rgba(168, 230, 61, 0.15); color: var(--accent); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    nav { display: none; }
+    main { margin-left: 0; padding: 20px 24px 60px; }
+    .stack-grid { grid-template-columns: 1fr 1fr; }
+    .schema-grid { grid-template-columns: 1fr 1fr; }
+    .module-grid { grid-template-columns: 1fr; }
+    .metric-row { grid-template-columns: 1fr 1fr; }
+    .phase { grid-template-columns: 1fr; gap: 16px; }
+  }
+
+  @media (max-width: 600px) {
+    .stack-grid { grid-template-columns: 1fr; }
+    .schema-grid { grid-template-columns: 1fr; }
+    .metric-row { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav>
+  <div class="nav-logo">
+    <span class="mark">Blueprint v1.0</span>
+    <span class="title">Sistem Daur Ulang</span>
+  </div>
+
+  <span class="nav-section">Overview</span>
+  <a href="#overview"><span class="num">01</span> Ringkasan</a>
+  <a href="#stack"><span class="num">02</span> Tech Stack</a>
+  <a href="#architecture"><span class="num">03</span> Arsitektur</a>
+
+  <span class="nav-section">Fitur</span>
+  <a href="#modules"><span class="num">04</span> Modul Aplikasi</a>
+  <a href="#database"><span class="num">05</span> Skema Database</a>
+  <a href="#api"><span class="num">06</span> API Design</a>
+
+  <span class="nav-section">Roadmap</span>
+  <a href="#roadmap"><span class="num">07</span> Fase MVP</a>
+  <a href="#risks"><span class="num">08</span> Risiko & Mitigasi</a>
+</nav>
+
+<!-- MAIN -->
+<main>
+
+  <!-- HERO -->
+  <div class="hero" id="overview">
+    <div class="hero-tag">Blueprint Rancangan Sistem</div>
+    <h1>Sistem Aplikasi<br><em>Daur Ulang Pintar</em></h1>
+    <p class="hero-sub">Dokumen rancangan teknis lengkap untuk membangun platform waste-to-product yang production-ready, modular, dan scalable — dari logistik penjemputan hingga marketplace produk daur ulang.</p>
+    <div class="hero-meta">
+      <div class="hero-stat">
+        <span class="val">3</span>
+        <span class="lbl">Fase Pengembangan</span>
+      </div>
+      <div class="divider"></div>
+      <div class="hero-stat">
+        <span class="val">~8 bln</span>
+        <span class="lbl">Estimasi MVP</span>
+      </div>
+      <div class="divider"></div>
+      <div class="hero-stat">
+        <span class="val">6</span>
+        <span class="lbl">Modul Utama</span>
+      </div>
+      <div class="divider"></div>
+      <div class="hero-stat">
+        <span class="val">MVP</span>
+        <span class="lbl">Target Launch</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION: TECH STACK -->
+  <div class="section" id="stack">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2>Tech Stack Rekomendasi</h2>
+    </div>
+
+    <p>Stack dipilih berdasarkan kriteria: komunitas besar, ekosistem matang, biaya operasional rendah untuk early-stage startup, dan kemudahan onboarding developer.</p>
+
+    <div class="stack-grid">
+      <div class="stack-card frontend">
+        <div class="stack-label">Frontend Web</div>
+        <div class="stack-name">Dashboard & Portal</div>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">Admin dashboard, impact reporting, B2B portal untuk arsitek/desainer.</p>
+        <div class="stack-tech">
+          <span class="tag">Next.js 14</span>
+          <span class="tag">TypeScript</span>
+          <span class="tag">Tailwind CSS</span>
+          <span class="tag">React Query</span>
+          <span class="tag">Recharts</span>
+        </div>
+      </div>
+
+      <div class="stack-card mobile">
+        <div class="stack-label">Mobile App</div>
+        <div class="stack-name">Driver & Customer App</div>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">Aplikasi untuk driver (penjemputan) dan pelanggan (request + tracking).</p>
+        <div class="stack-tech">
+          <span class="tag">React Native</span>
+          <span class="tag">Expo</span>
+          <span class="tag">React Navigation</span>
+          <span class="tag">Zustand</span>
+        </div>
+      </div>
+
+      <div class="stack-card backend">
+        <div class="stack-label">Backend API</div>
+        <div class="stack-name">Core Service Layer</div>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">REST API utama yang melayani semua client. Terpisah per domain (monorepo modular).</p>
+        <div class="stack-tech">
+          <span class="tag">Node.js</span>
+          <span class="tag">Fastify</span>
+          <span class="tag">Prisma ORM</span>
+          <span class="tag">Zod</span>
+          <span class="tag">JWT</span>
+        </div>
+      </div>
+
+      <div class="stack-card db">
+        <div class="stack-label">Database & Cache</div>
+        <div class="stack-name">Data Layer</div>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">Kombinasi relasional untuk transaksi dan in-memory cache untuk performa.</p>
+        <div class="stack-tech">
+          <span class="tag">PostgreSQL</span>
+          <span class="tag">Redis</span>
+          <span class="tag">TimescaleDB</span>
+          <span class="tag">S3/MinIO</span>
+        </div>
+      </div>
+
+      <div class="stack-card infra">
+        <div class="stack-label">Infrastructure</div>
+        <div class="stack-name">Cloud & DevOps</div>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">Container-based deployment dengan CI/CD otomatis. Bisa dimulai dari VPS sederhana.</p>
+        <div class="stack-tech">
+          <span class="tag">Docker</span>
+          <span class="tag">GitHub Actions</span>
+          <span class="tag">Nginx</span>
+          <span class="tag">Railway / Fly.io</span>
+        </div>
+      </div>
+
+      <div class="stack-card iot">
+        <div class="stack-label">IoT & Realtime</div>
+        <div class="stack-name">Sensor & Event Stream</div>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">Komunikasi dua arah untuk data sensor timbangan dan kompos monitor.</p>
+        <div class="stack-tech">
+          <span class="tag">MQTT (Mosquitto)</span>
+          <span class="tag">WebSocket</span>
+          <span class="tag">Node-RED</span>
+          <span class="tag">ESP32</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout yellow">
+      <div class="callout-title">💡 Catatan Stack untuk MVP</div>
+      <p>Untuk fase MVP, gunakan <strong>Railway.app</strong> atau <strong>Supabase</strong> sebagai backend-as-a-service untuk mempercepat setup. TimescaleDB dan IoT gateway baru diimplementasi di fase 2 saat data sensor sudah aktif.</p>
+    </div>
+  </div>
+
+  <!-- SECTION: ARCHITECTURE -->
+  <div class="section" id="architecture">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2>Arsitektur Sistem</h2>
+    </div>
+
+    <p>Sistem dirancang dengan pendekatan <strong>modular monolith</strong> terlebih dahulu — satu codebase dengan domain yang terisolasi — sebelum dipecah menjadi microservices saat skala membutuhkan. Ini mengurangi complexity operasional di awal.</p>
+
+    <div class="arch-diagram">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); margin-bottom:24px;">System Architecture Diagram</div>
+
+      <div class="arch-layer">
+        <div class="arch-label">Clients</div>
+        <div class="arch-boxes">
+          <div class="arch-box highlight-green">Web Dashboard (Next.js)</div>
+          <div class="arch-box highlight-green">Customer App (RN)</div>
+          <div class="arch-box highlight-green">Driver App (RN)</div>
+          <div class="arch-box highlight-green">B2B Portal (Next.js)</div>
+        </div>
+      </div>
+
+      <div class="arch-arrow">↓</div>
+
+      <div class="arch-layer">
+        <div class="arch-label">Gateway</div>
+        <div class="arch-boxes">
+          <div class="arch-box highlight-yellow">API Gateway / Nginx</div>
+          <div class="arch-box highlight-yellow">Auth Middleware (JWT)</div>
+          <div class="arch-box highlight-yellow">Rate Limiter</div>
+        </div>
+      </div>
+
+      <div class="arch-arrow">↓</div>
+
+      <div class="arch-layer">
+        <div class="arch-label">Services</div>
+        <div class="arch-boxes">
+          <div class="arch-box">Auth Service</div>
+          <div class="arch-box">Pickup Service</div>
+          <div class="arch-box">Material Tracking</div>
+          <div class="arch-box">Production Service</div>
+          <div class="arch-box">Marketplace Service</div>
+          <div class="arch-box">Notification Service</div>
+          <div class="arch-box">Report Service</div>
+        </div>
+      </div>
+
+      <div class="arch-arrow">↓</div>
+
+      <div class="arch-layer">
+        <div class="arch-label">Data</div>
+        <div class="arch-boxes">
+          <div class="arch-box highlight-teal">PostgreSQL (Primary)</div>
+          <div class="arch-box highlight-teal">Redis (Cache/Queue)</div>
+          <div class="arch-box highlight-teal">S3 (Media/QR)</div>
+        </div>
+      </div>
+
+      <div class="arch-arrow">↓</div>
+
+      <div class="arch-layer">
+        <div class="arch-label">IoT Layer</div>
+        <div class="arch-boxes">
+          <div class="arch-box highlight-red">MQTT Broker</div>
+          <div class="arch-box highlight-red">Digital Scale (BT)</div>
+          <div class="arch-box highlight-red">Compost Sensors</div>
+          <div class="arch-box highlight-red">QR Scanner</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout teal">
+      <div class="callout-title">🔗 Alur Data Utama: Waste-to-Product</div>
+      <div class="flow" style="margin-top:12px;">
+        <div class="flow-step">Request Pickup</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Driver Dijadwalkan</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Timbang + QR Generate</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Sortir Material</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Proses Produksi</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Produk Listed</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Terjual + Impact Report</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION: MODULES -->
+  <div class="section" id="modules">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2>Modul Aplikasi & Fitur</h2>
+    </div>
+
+    <p>Setiap modul merupakan domain fungsional yang terisolasi. Label <span class="badge mvp">MVP</span> menandakan fitur wajib fase 1, <span class="badge v2">V2</span> untuk fase 2, dan <span class="badge v3">V3</span> untuk fase 3.</p>
+
+    <div class="module-grid" style="margin-top:24px;">
+
+      <!-- MODULE 1 -->
+      <div class="module-card">
+        <div class="module-icon green">🚛</div>
+        <h3>Modul Logistik & Penjemputan</h3>
+        <p style="font-size:12px; color:var(--text-dim);">Mengelola seluruh siklus request hingga selesainya penjemputan sampah.</p>
+        <ul class="feature-list">
+          <li>Form request penjemputan oleh pelanggan (tipe sampah, berat estimasi, alamat, waktu) <span class="badge mvp">MVP</span></li>
+          <li>Dashboard driver: list pickup hari ini, navigasi ke Maps, konfirmasi tiba <span class="badge mvp">MVP</span></li>
+          <li>Input berat aktual + foto saat pickup, generate QR code material otomatis <span class="badge mvp">MVP</span></li>
+          <li>Status tracking real-time untuk pelanggan (dijadwalkan → dalam perjalanan → selesai) <span class="badge mvp">MVP</span></li>
+          <li>Geo-routing otomatis: optimasi urutan rute multi-pickup dalam satu hari <span class="badge v2">V2</span></li>
+          <li>Integrasi Bluetooth timbangan digital IoT <span class="badge v2">V2</span></li>
+          <li>AI sorting via kamera: deteksi otomatis jenis material <span class="badge v3">V3</span></li>
+        </ul>
+      </div>
+
+      <!-- MODULE 2 -->
+      <div class="module-card">
+        <div class="module-icon yellow">🏷️</div>
+        <h3>Modul Material Tracking</h3>
+        <p style="font-size:12px; color:var(--text-dim);">Lacak perjalanan material dari limbah mentah hingga produk jadi menggunakan QR/Barcode.</p>
+        <ul class="feature-list">
+          <li>Generate QR Code unik per batch material saat pickup selesai <span class="badge mvp">MVP</span></li>
+          <li>Update status material: diterima gudang → dalam produksi → selesai → terjual <span class="badge mvp">MVP</span></li>
+          <li>Halaman riwayat material untuk setiap produk (konsumen bisa scan QR produk) <span class="badge mvp">MVP</span></li>
+          <li>Laporan stok bahan baku real-time per tipe material <span class="badge mvp">MVP</span></li>
+          <li>Lot traceability: satu produk bisa berasal dari beberapa pickup batch <span class="badge v2">V2</span></li>
+          <li>Blockchain anchoring untuk data integrity audit eksternal <span class="badge v3">V3</span></li>
+        </ul>
+      </div>
+
+      <!-- MODULE 3 -->
+      <div class="module-card">
+        <div class="module-icon teal">⚙️</div>
+        <h3>Modul Manajemen Produksi</h3>
+        <p style="font-size:12px; color:var(--text-dim);">Catat proses transformasi material menjadi produk jadi di lantai produksi.</p>
+        <ul class="feature-list">
+          <li>Input produksi: ambil batch material → catat proses → output produk jadi + berat <span class="badge mvp">MVP</span></li>
+          <li>Manajemen kategori produk: furnitur, kompos, coffee pad, ornamen arsitektur <span class="badge mvp">MVP</span></li>
+          <li>Upload foto produk hasil produksi + spesifikasi teknis <span class="badge mvp">MVP</span></li>
+          <li>Dashboard stok produk jadi siap jual <span class="badge mvp">MVP</span></li>
+          <li>IoT sensor kompos: monitoring suhu + kelembapan realtime dengan alert <span class="badge v2">V2</span></li>
+          <li>IoT kontrol mesin cetak ornamen arsitektur <span class="badge v3">V3</span></li>
+        </ul>
+      </div>
+
+      <!-- MODULE 4 -->
+      <div class="module-card">
+        <div class="module-icon red">🛍️</div>
+        <h3>Modul Marketplace</h3>
+        <p style="font-size:12px; color:var(--text-dim);">Platform penjualan produk daur ulang dengan label transparansi material.</p>
+        <ul class="feature-list">
+          <li>Galeri produk dengan filter kategori, material, harga <span class="badge mvp">MVP</span></li>
+          <li>Halaman detail produk: foto, spesifikasi, label "Riwayat Material" (link QR) <span class="badge mvp">MVP</span></li>
+          <li>Keranjang belanja + checkout (integrasi payment gateway Midtrans/Xendit) <span class="badge mvp">MVP</span></li>
+          <li>Manajemen pesanan: konfirmasi, pengiriman, selesai <span class="badge mvp">MVP</span></li>
+          <li>Review & rating produk oleh pembeli <span class="badge v2">V2</span></li>
+          <li>B2B Portal: pemesanan custom volume besar untuk arsitek/desainer <span class="badge v2">V2</span></li>
+          <li>API publik untuk integrasi platform e-commerce eksternal <span class="badge v3">V3</span></li>
+        </ul>
+      </div>
+
+      <!-- MODULE 5 -->
+      <div class="module-card">
+        <div class="module-icon purple">📊</div>
+        <h3>Modul Impact Dashboard</h3>
+        <p style="font-size:12px; color:var(--text-dim);">Laporan visual dampak lingkungan untuk pengguna, internal, dan laporan investor.</p>
+        <ul class="feature-list">
+          <li>Dashboard pelanggan: total sampah disetorkan, produk terbuat dari material mereka <span class="badge mvp">MVP</span></li>
+          <li>Dashboard admin: total volume sampah, jumlah produk, revenue, top pelanggan <span class="badge mvp">MVP</span></li>
+          <li>Konversi visual: kg sampah → CO₂ offset, pohon setara, produk fungsional <span class="badge mvp">MVP</span></li>
+          <li>Export laporan PDF/CSV untuk keperluan reporting <span class="badge mvp">MVP</span></li>
+          <li>Impact certificate yang bisa dibagikan ke media sosial <span class="badge v2">V2</span></li>
+          <li>Public impact page untuk laporan transparansi startup <span class="badge v2">V2</span></li>
+        </ul>
+      </div>
+
+      <!-- MODULE 6 -->
+      <div class="module-card">
+        <div class="module-icon blue">👥</div>
+        <h3>Modul Auth & User Management</h3>
+        <p style="font-size:12px; color:var(--text-dim);">Sistem autentikasi multi-role dan manajemen pengguna lintas platform.</p>
+        <ul class="feature-list">
+          <li>Role-based: Customer, Driver, Operator Gudang, Admin, B2B Partner <span class="badge mvp">MVP</span></li>
+          <li>Registrasi + login email/password, OTP via WhatsApp/SMS <span class="badge mvp">MVP</span></li>
+          <li>Profil pengguna + riwayat transaksi (pickup & pembelian) <span class="badge mvp">MVP</span></li>
+          <li>Push notification: status pickup, pesanan, promo <span class="badge mvp">MVP</span></li>
+          <li>SSO Google / Apple Sign-In <span class="badge v2">V2</span></li>
+          <li>Loyalty points & reward sistem untuk pelanggan aktif <span class="badge v3">V3</span></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION: DATABASE -->
+  <div class="section" id="database">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2>Skema Database (MVP)</h2>
+    </div>
+
+    <p>Rancangan tabel inti yang dibutuhkan untuk menjalankan seluruh fitur MVP. Relasi antar tabel mengikuti prinsip normalisasi untuk memastikan integritas data material.</p>
+
+    <div class="schema-grid" style="margin-top:24px;">
+
+      <div class="schema-table">
+        <div class="schema-head green">users</div>
+        <div class="schema-body">
+          <div class="schema-field"><span class="field-name field-pk">id</span><span class="field-type">uuid PK</span></div>
+          <div class="schema-field"><span class="field-name">email</span><span class="field-type">varchar</span></div>
+          <div class="schema-field"><span class="field-name">phone</span><span class="field-type">varchar</span></div>
+          <div class="schema-field"><span class="field-name">role</span><span class="field-type">enum</span></div>
+          <div class="schema-field"><span class="field-name">name</span><span class="field-type">varchar</span></div>
+          <div class="schema-field"><span class="field-name">created_at</span><span class="field-type">timestamp</span></div>
+        </div>
+      </div>
+
+      <div class="schema-table">
+        <div class="schema-head yellow">pickups</div>
+        <div class="schema-body">
+          <div class="schema-field"><span class="field-name field-pk">id</span><span class="field-type">uuid PK</span></div>
+          <div class="schema-field"><span class="field-name">customer_id</span><span class="field-type">uuid FK→users</span></div>
+          <div class="schema-field"><span class="field-name">driver_id</span><span class="field-type">uuid FK→users</span></div>
+          <div class="schema-field"><span class="field-name">address</span><span class="field-type">text</span></div>
+          <div class="schema-field"><span class="field-name">scheduled_at</span><span class="field-type">timestamp</span></div>
+          <div class="schema-field"><span class="field-name">status</span><span class="field-type">enum</span></div>
+          <div class="schema-field"><span class="field-name">actual_weight</span><span class="field-type">decimal</span></div>
+          <div class="schema-field"><span class="field-name">photo_url</span><span class="field-type">varchar</span></div>
+        </div>
+      </div>
+
+      <div class="schema-table">
+        <div class="schema-head teal">material_batches</div>
+        <div class="schema-body">
+          <div class="schema-field"><span class="field-name field-pk">id</span><span class="field-type">uuid PK</span></div>
+          <div class="schema-field"><span class="field-name">pickup_id</span><span class="field-type">uuid FK→pickups</span></div>
+          <div class="schema-field"><span class="field-name">qr_code</span><span class="field-type">varchar unique</span></div>
+          <div class="schema-field"><span class="field-name">material_type</span><span class="field-type">enum</span></div>
+          <div class="schema-field"><span class="field-name">weight_kg</span><span class="field-type">decimal</span></div>
+          <div class="schema-field"><span class="field-name">status</span><span class="field-type">enum</span></div>
+          <div class="schema-field"><span class="field-name">received_at</span><span class="field-type">timestamp</span></div>
+        </div>
+      </div>
+
+      <div class="schema-table">
+        <div class="schema-head red">production_runs</div>
+        <div class="schema-body">
+          <div class="schema-field"><span class="field-name field-pk">id</span><span class="field-type">uuid PK</span></div>
+          <div class="schema-field"><span class="field-name">batch_id</span><span class="field-type">uuid FK→batches</span></div>
+          <div class="schema-field"><span class="field-name">operator_id</span><span class="field-type">uuid FK→users</span></div>
+          <div class="schema-field"><span class="field-name">product_category</span><span class="field-type">enum</span></div>
+          <div class="schema-field"><span class="field-name">qty_output</span><span class="field-type">integer</span></div>
+          <div class="schema-field"><span class="field-name">started_at</span><span class="field-type">timestamp</span></div>
+          <div class="schema-field"><span class="field-name">completed_at</span><span class="field-type">timestamp</span></div>
+        </div>
+      </div>
+
+      <div class="schema-table">
+        <div class="schema-head purple">products</div>
+        <div class="schema-body">
+          <div class="schema-field"><span class="field-name field-pk">id</span><span class="field-type">uuid PK</span></div>
+          <div class="schema-field"><span class="field-name">production_run_id</span><span class="field-type">uuid FK</span></div>
+          <div class="schema-field"><span class="field-name">name</span><span class="field-type">varchar</span></div>
+          <div class="schema-field"><span class="field-name">category</span><span class="field-type">enum</span></div>
+          <div class="schema-field"><span class="field-name">price</span><span class="field-type">decimal</span></div>
+          <div class="schema-field"><span class="field-name">stock</span><span class="field-type">integer</span></div>
+          <div class="schema-field"><span class="field-name">images</span><span class="field-type">jsonb</span></div>
+          <div class="schema-field"><span class="field-name">is_listed</span><span class="field-type">boolean</span></div>
+        </div>
+      </div>
+
+      <div class="schema-table">
+        <div class="schema-head blue">orders</div>
+        <div class="schema-body">
+          <div class="schema-field"><span class="field-name field-pk">id</span><span class="field-type">uuid PK</span></div>
+          <div class="schema-field"><span class="field-name">customer_id</span><span class="field-type">uuid FK→users</span></div>
+          <div class="schema-field"><span class="field-name">total_amount</span><span class="field-type">decimal</span></div>
+          <div class="schema-field"><span class="field-name">payment_status</span><span class="field-type">enum</span></div>
+          <div class="schema-field"><span class="field-name">shipping_address</span><span class="field-type">jsonb</span></div>
+          <div class="schema-field"><span class="field-name">payment_ref</span><span class="field-type">varchar</span></div>
+          <div class="schema-field"><span class="field-name">created_at</span><span class="field-type">timestamp</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION: API -->
+  <div class="section" id="api">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2>API Design (REST)</h2>
+    </div>
+
+    <p>Endpoint dikelompokkan per domain. Semua endpoint terproteksi JWT kecuali yang bertanda <code>public</code>. Prefix base URL: <code>/api/v1</code></p>
+
+    <div style="margin-top:24px;">
+
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">Auth</div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/auth/register</span><span class="endpoint-desc">Registrasi user baru</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/auth/login</span><span class="endpoint-desc">Login → return JWT</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/auth/otp/send</span><span class="endpoint-desc">Kirim OTP ke WhatsApp</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/auth/otp/verify</span><span class="endpoint-desc">Verifikasi OTP</span></div>
+      </div>
+
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">Pickup</div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/pickups</span><span class="endpoint-desc">Customer buat request pickup</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/pickups</span><span class="endpoint-desc">List pickup (customer/driver)</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/pickups/:id</span><span class="endpoint-desc">Detail pickup</span></div>
+        <div class="endpoint"><span class="method put">PUT</span><span class="endpoint-path">/pickups/:id/status</span><span class="endpoint-desc">Driver update status</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/pickups/:id/complete</span><span class="endpoint-desc">Selesaikan pickup + upload foto + berat</span></div>
+      </div>
+
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">Material Tracking</div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/materials</span><span class="endpoint-desc">List stok material gudang</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/materials/qr/:code</span><span class="endpoint-desc">Lookup material by QR (public)</span></div>
+        <div class="endpoint"><span class="method put">PUT</span><span class="endpoint-path">/materials/:id/status</span><span class="endpoint-desc">Update status material</span></div>
+      </div>
+
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">Production</div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/production</span><span class="endpoint-desc">Buat production run baru</span></div>
+        <div class="endpoint"><span class="method put">PUT</span><span class="endpoint-path">/production/:id/complete</span><span class="endpoint-desc">Selesaikan produksi + input output produk</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/production</span><span class="endpoint-desc">Histori produksi</span></div>
+      </div>
+
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">Marketplace</div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/products</span><span class="endpoint-desc">List produk (public, dengan filter)</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/products/:id</span><span class="endpoint-desc">Detail produk + riwayat material (public)</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/orders</span><span class="endpoint-desc">Buat order + initiate payment</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/orders/:id</span><span class="endpoint-desc">Status order</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="endpoint-path">/webhooks/payment</span><span class="endpoint-desc">Payment gateway callback</span></div>
+      </div>
+
+      <div class="endpoint-group">
+        <div class="endpoint-group-title">Reports & Impact</div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/reports/impact</span><span class="endpoint-desc">Impact stats user (CO₂, berat, produk)</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/reports/admin/summary</span><span class="endpoint-desc">Summary admin: volume, revenue, top items</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="endpoint-path">/reports/export</span><span class="endpoint-desc">Export CSV/PDF laporan</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION: ROADMAP -->
+  <div class="section" id="roadmap">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2>Roadmap Pengembangan</h2>
+    </div>
+
+    <div class="metric-row">
+      <div class="metric-card">
+        <div class="metric-val" style="color:var(--phase1)">3 bln</div>
+        <div class="metric-label">Fase 1: MVP Core</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" style="color:var(--phase2)">3 bln</div>
+        <div class="metric-label">Fase 2: Enhancement</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" style="color:var(--phase3)">2+ bln</div>
+        <div class="metric-label">Fase 3: Scale & AI</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val">~8 bln</div>
+        <div class="metric-label">Total Estimasi</div>
+      </div>
+    </div>
+
+    <div class="phases">
+
+      <!-- PHASE 1 -->
+      <div class="phase">
+        <div class="phase-meta">
+          <div class="phase-num">FASE 01</div>
+          <div class="phase-title p1">MVP Core</div>
+          <div class="phase-duration">Bulan 1–3</div>
+          <div class="phase-goal">Target: sistem berjalan end-to-end dari pickup request hingga produk terdaftar di marketplace. Cukup untuk soft launch & demo investor.</div>
+        </div>
+        <div class="phase-content">
+          <h3>Sprint 1–2 (Bulan 1): Foundation</h3>
+          <ul class="task-list">
+            <li><span class="dot p1"></span>Setup monorepo (Next.js, React Native, Fastify), konfigurasi PostgreSQL + Redis, CI/CD dasar</li>
+            <li><span class="dot p1"></span>Implementasi auth: registrasi, login JWT, OTP WhatsApp (Fonnte/Wablas), RBAC 5 role</li>
+            <li><span class="dot p1"></span>Modul profil pengguna dan manajemen alamat</li>
+            <li><span class="dot p1"></span>Setup storage S3 (Cloudflare R2) untuk foto dan dokumen</li>
+          </ul>
+          <h3>Sprint 3–4 (Bulan 2): Pickup & Tracking</h3>
+          <ul class="task-list">
+            <li><span class="dot p1"></span>Customer App: form request pickup, tracking status real-time via WebSocket</li>
+            <li><span class="dot p1"></span>Driver App: dashboard pickup hari ini, konfirmasi selesai, input berat + foto</li>
+            <li><span class="dot p1"></span>Auto-generate QR Code unik per material batch saat pickup selesai</li>
+            <li><span class="dot p1"></span>Admin panel: jadwal driver, monitoring semua pickup</li>
+            <li><span class="dot p1"></span>Push notification: FCM untuk status update pickup</li>
+          </ul>
+          <h3>Sprint 5–6 (Bulan 3): Produksi & Marketplace</h3>
+          <ul class="task-list">
+            <li><span class="dot p1"></span>Operator panel: input produksi, kaitkan batch material, upload produk hasil</li>
+            <li><span class="dot p1"></span>Marketplace web: listing produk, halaman detail + QR riwayat material</li>
+            <li><span class="dot p1"></span>Integrasi Midtrans (payment gateway): transfer bank, QRIS, dompet digital</li>
+            <li><span class="dot p1"></span>Impact dashboard basic: total kg, CO₂ offset, jumlah produk terbuat</li>
+            <li><span class="dot p1"></span>QA + UAT internal, bug fixing, soft launch</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- PHASE 2 -->
+      <div class="phase">
+        <div class="phase-meta">
+          <div class="phase-num">FASE 02</div>
+          <div class="phase-title p2">Enhancement</div>
+          <div class="phase-duration">Bulan 4–6</div>
+          <div class="phase-goal">Target: tingkatkan pengalaman pengguna, tambah kapabilitas IoT awal, dan buka saluran B2B untuk arsitek & desainer.</div>
+        </div>
+        <div class="phase-content">
+          <h3>Sprint 7–8 (Bulan 4): UX & Optimization</h3>
+          <ul class="task-list">
+            <li><span class="dot p2"></span>Geo-routing: integrasi Google Maps / OSRM untuk optimasi urutan rute driver multi-pickup</li>
+            <li><span class="dot p2"></span>Review & rating produk oleh pembeli terverifikasi</li>
+            <li><span class="dot p2"></span>SSO Google Sign-In untuk customer app</li>
+            <li><span class="dot p2"></span>Impact certificate yang bisa dibagikan ke media sosial (PNG/PDF dinamis)</li>
+          </ul>
+          <h3>Sprint 9–10 (Bulan 5): IoT & Produksi</h3>
+          <ul class="task-list">
+            <li><span class="dot p2"></span>Integrasi timbangan digital via Bluetooth (protokol UART/BLE ke API mobile)</span></li>
+            <li><span class="dot p2"></span>Setup MQTT broker (Mosquitto) + sensor kompos: monitoring suhu & kelembapan, alert threshold</li>
+            <li><span class="dot p2"></span>Dashboard IoT realtime untuk operator produksi kompos</li>
+            <li><span class="dot p2"></span>TimescaleDB untuk storage time-series data sensor</li>
+          </ul>
+          <h3>Sprint 11–12 (Bulan 6): B2B & Reporting</h3>
+          <ul class="task-list">
+            <li><span class="dot p2"></span>B2B Portal: form pemesanan custom volume besar, flow approval, invoice generator</li>
+            <li><span class="dot p2"></span>Advanced reporting: laporan bulanan, tren material, konversi per kategori produk</li>
+            <li><span class="dot p2"></span>Export laporan PDF otomatis untuk keperluan investor/CSR partner</li>
+            <li><span class="dot p2"></span>Public impact page startup (transparansi data)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- PHASE 3 -->
+      <div class="phase">
+        <div class="phase-meta">
+          <div class="phase-num">FASE 03</div>
+          <div class="phase-title p3">Scale & AI</div>
+          <div class="phase-duration">Bulan 7+</div>
+          <div class="phase-goal">Target: integrasi AI/ML untuk efisiensi operasional, ekspansi ekosistem dengan API publik, dan loyalty program pelanggan.</div>
+        </div>
+        <div class="phase-content">
+          <h3>AI & Machine Learning</h3>
+          <ul class="task-list">
+            <li><span class="dot p3"></span>AI Sorting via kamera: model CV (YOLOv8) untuk klasifikasi sampah organik/anorganik di titik penjemputan</li>
+            <li><span class="dot p3"></span>Demand forecasting: prediksi volume pickup berdasarkan histori untuk optimasi jadwal driver</li>
+            <li><span class="dot p3"></span>Anomaly detection pada sensor IoT: deteksi mesin kompos bermasalah sebelum breakdown</li>
+          </ul>
+          <h3>Ecosystem & Scale</h3>
+          <ul class="task-list">
+            <li><span class="dot p3"></span>REST API publik untuk integrasi platform e-commerce eksternal (Tokopedia, Shopee)</li>
+            <li><span class="dot p3"></span>Loyalty points system: reward pelanggan aktif, gamifikasi setoran sampah</li>
+            <li><span class="dot p3"></span>Multi-tenant: support ekspansi ke kota lain dengan konfigurasi zona terpisah</li>
+            <li><span class="dot p3"></span>Blockchain anchoring untuk sertifikasi data integrity produk daur ulang</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION: RISKS -->
+  <div class="section" id="risks">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <h2>Risiko & Strategi Mitigasi</h2>
+    </div>
+
+    <table class="risk-table">
+      <thead>
+        <tr>
+          <th>Risiko</th>
+          <th>Level</th>
+          <th>Mitigasi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color:var(--text)">Kompleksitas IoT di awal</strong><br>Integrasi hardware timbangan/sensor membutuhkan waktu debug panjang</td>
+          <td><span class="risk-level high">Tinggi</span></td>
+          <td>Tunda IoT ke fase 2. MVP gunakan input manual untuk berat dan monitoring. Pilih hardware dengan SDK matang (ESP32 + library PubSubClient).</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--text)">Data integrity material</strong><br>QR code bisa disalahgunakan atau tidak konsisten bila proses manual</td>
+          <td><span class="risk-level high">Tinggi</span></td>
+          <td>QR auto-generate hanya via sistem saat pickup selesai, tidak bisa dibuat manual. Setiap scan dicatat dengan timestamp + user yang melakukan scan.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--text)">Adopsi driver app rendah</strong><br>Driver tidak mau / tidak bisa menggunakan app mobile</td>
+          <td><span class="risk-level mid">Sedang</span></td>
+          <td>Desain UI semaksimal mungkin sederhana, ukuran tombol besar. Sediakan alternatif WhatsApp bot untuk konfirmasi status sebagai fallback.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--text)">Payment gateway kompleks</strong><br>Integrasi dan testing payment memakan waktu lama</td>
+          <td><span class="risk-level mid">Sedang</span></td>
+          <td>Gunakan Midtrans Snap (hosted payment page) di MVP — tidak perlu custom UI. Switch ke custom payment UI di fase 2.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--text)">Keamanan data pengguna</strong><br>Data alamat, transaksi, dan kontak pelanggan rentan</td>
+          <td><span class="risk-level mid">Sedang</span></td>
+          <td>HTTPS wajib (Let's Encrypt), enkripsi password (bcrypt), JWT refresh token rotation, rate limiting API, audit log untuk aksi sensitif.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--text)">Scope creep</strong><br>Fitur terus bertambah, MVP tidak pernah rilis</td>
+          <td><span class="risk-level low">Rendah</span></td>
+          <td>Strict feature freeze setelah sprint planning. Semua fitur baru masuk backlog V2. Gunakan GitHub Issues + milestone untuk disiplin roadmap.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout" style="margin-top:32px;">
+      <div class="callout-title">✅ Rekomendasi Tim MVP Minimal</div>
+      <p>Untuk membangun MVP dalam 3 bulan, tim ideal adalah: <strong>1 Full-stack developer</strong> (Next.js + Node.js), <strong>1 Mobile developer</strong> (React Native), <strong>1 UI/UX designer</strong> (bisa part-time), dan <strong>1 Product/QA</strong>. Total 3–4 orang. Satu developer berpengalaman yang menguasai full-stack + React Native bisa menjalankan sendiri dalam waktu lebih panjang (~5 bulan).</p>
+    </div>
+
+    <div class="callout yellow" style="margin-top:16px;">
+      <div class="callout-title">🚀 Prioritas Tertinggi untuk Launch</div>
+      <p>Dari semua modul, tiga hal yang paling krusial untuk bisa dipasarkan: (1) <strong>Pickup flow end-to-end</strong> yang reliable, (2) <strong>QR material traceability</strong> sebagai diferensiasi utama, dan (3) <strong>Impact dashboard</strong> yang visual dan shareable. Ketiga ini adalah nilai jual inti yang tidak dimiliki kompetitor.</p>
+    </div>
+  </div>
+
+</main>
+
+</body>
+</html>
